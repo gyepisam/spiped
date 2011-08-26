@@ -318,12 +318,19 @@ int
 sock_listener(const struct sock_addr * sa)
 {
 	int s;
+  int reuse = 1;
 
 	/* Create a socket. */
 	if ((s = socket(sa->ai_family, sa->ai_socktype, 0)) == -1) {
 		warnp("socket(%d, %d)", sa->ai_family, sa->ai_socktype);
 		goto err0;
 	}
+
+  /* Allow the address to be reused */
+  if ((setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse))) == -1) {
+    warnp("error setting socket reuse option");
+    goto err1;
+  }
 
 	/* Bind the socket. */
 	if (bind(s, sa->name, sa->namelen)) {
