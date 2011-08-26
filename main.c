@@ -20,7 +20,7 @@ usage(void)
 	fprintf(stderr, "usage: spiped {-e | -d} -s <source socket> "
 	    "-t <target socket> -k <key file>\n"
 	    "    [-f] [-n <max # connections>] "
-	    "[-o <connection timeout>] [-p <pidfile>]\n");
+	    "[-o <connection timeout>] [[-p <pidfile>] | [-g]]\n");
 	exit(1);
 }
 
@@ -72,12 +72,15 @@ main(int argc, char * argv[])
 	int opt_d = 0;
 	int opt_e = 0;
 	int opt_f = 0;
+  int opt_g = 0;
+
 	const char * opt_k = NULL;
 	intmax_t opt_n = 0;
 	double opt_o = 0.0;
 	char * opt_p = NULL;
 	const char * opt_s = NULL;
 	const char * opt_t = NULL;
+
 
 	/* Working variables. */
 	struct sock_addr ** sas_s;
@@ -89,7 +92,7 @@ main(int argc, char * argv[])
 	WARNP_INIT;
 
 	/* Parse the command line. */
-	while ((ch = getopt(argc, argv, "defk:n:o:p:s:t:")) != -1) {
+	while ((ch = getopt(argc, argv, "defgk:n:o:p:s:t:")) != -1) {
 		switch (ch) {
 		case 'd':
 			if (opt_d || opt_e)
@@ -106,6 +109,9 @@ main(int argc, char * argv[])
 				usage();
 			opt_f = 1;
 			break;
+    case 'g':
+      opt_g = 1;
+      break;
 		case 'k':
 			if (opt_k)
 				usage();
@@ -171,6 +177,8 @@ main(int argc, char * argv[])
 		usage();
 	if (opt_t == NULL)
 		usage();
+  if (opt_g && (opt_p != NULL))
+    usage();
 
 	/* Resolve source address. */
 	if ((sas_s = sock_resolve(opt_s)) == NULL) {
@@ -202,17 +210,19 @@ main(int argc, char * argv[])
 	if ((s = sock_listener(sas_s[0])) == -1)
 		exit(1);
 
-	/* Daemonize and write pid. */
-	if (opt_p == NULL) {
-		if (asprintf(&opt_p, "%s.pid", opt_s) == -1) {
-			warnp("asprintf");
-			exit(1);
-		}
-	}
-	if (daemonize(opt_p)) {
-		warnp("Failed to daemonize");
-		exit(1);
-	}
+  if (!opt_g) {
+	  /* Daemonize and write pid. */
+    if (opt_p == NULL) {
+      if (asprintf(&opt_p, "%s.pid", opt_s) == -1) {
+        warnp("asprintf");
+        exit(1);
+      }
+    }
+    if (daemonize(opt_p)) {
+      warnp("Failed to daemonize");
+      exit(1);
+    }
+  }
 
 	/* Start accepting connections. */
 	if (conn_accept(s, sas_t, opt_d, opt_f, kfhash, opt_n, opt_o)) {
