@@ -1,0 +1,61 @@
+.POSIX:
+PROG=spiped
+SRCS=main.c conn.c pcrypt.c proto_handshake.c proto_pipe.c elasticarray.c ptrheap.c timerqueue.c asprintf.c daemonize.c entropy.c monoclock.c sock.c warnp.c events_immediate.c events_network.c events_timer.c events.c network_accept.c network_buf.c network_connect.c crypto_aesctr.c crypto_dh.c crypto_dh_group14.c crypto_entropy.c crypto_verify_bytes.c sha256.c
+IDIRS=-I lib/datastruct -I lib/util -I lib/events -I lib/network -I lib/crypto
+LDADD=-lrt -lcrypto
+
+BINDIR_DEFAULT=/usr/local/bin
+
+all:	${PROG}
+
+install:
+	if [ -z "${BINDIR}" ]; then		\
+		BINDIR="${BINDIR_DEFAULT}";	\
+	else					\
+		BINDIR="${BINDIR}";		\
+	fi;					\
+	make BINDIR="$${BINDIR}" install_bindirset
+
+install_bindirset:${PROG}
+	mkdir -p ${BINDIR}
+	cp ${PROG} ${BINDIR}/_inst.${PROG}.$$$$_ &&	\
+	    strip ${BINDIR}/_inst.${PROG}.$$$$_ &&	\
+	    chmod 0555 ${BINDIR}/_inst.${PROG}.$$$$_ && \
+	    mv -f ${BINDIR}/_inst.${PROG}.$$$$_ ${BINDIR}/${PROG}
+
+clean:
+	rm -f ${PROG} ${SRCS:.c=.o}
+
+${PROG}:${SRCS:.c=.o}
+	${CC} -o ${PROG} ${LDADD} ${SRCS:.c=.o}
+
+${SRCS:.c=.o}:
+	${CC} ${CFLAGS} ${IDIRS} -c $<
+
+main.o: main.c
+conn.o: conn.c
+pcrypt.o: pcrypt.c
+proto_handshake.o: proto_handshake.c
+proto_pipe.o: proto_pipe.c
+elasticarray.o: lib/datastruct/elasticarray.c
+ptrheap.o: lib/datastruct/ptrheap.c
+timerqueue.o: lib/datastruct/timerqueue.c
+asprintf.o: lib/util/asprintf.c
+daemonize.o: lib/util/daemonize.c
+entropy.o: lib/util/entropy.c
+monoclock.o: lib/util/monoclock.c
+sock.o: lib/util/sock.c
+warnp.o: lib/util/warnp.c
+events_immediate.o: lib/events/events_immediate.c
+events_network.o: lib/events/events_network.c
+events_timer.o: lib/events/events_timer.c
+events.o: lib/events/events.c
+network_accept.o: lib/network/network_accept.c
+network_buf.o: lib/network/network_buf.c
+network_connect.o: lib/network/network_connect.c
+crypto_aesctr.o: lib/crypto/crypto_aesctr.c
+crypto_dh.o: lib/crypto/crypto_dh.c
+crypto_dh_group14.o: lib/crypto/crypto_dh_group14.c
+crypto_entropy.o: lib/crypto/crypto_entropy.c
+crypto_verify_bytes.o: lib/crypto/crypto_verify_bytes.c
+sha256.o: lib/crypto/sha256.c
