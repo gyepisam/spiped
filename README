@@ -31,7 +31,7 @@ Usage
 -----
 
 usage: spiped {-e | -d} -s <source socket> -t <target socket> -k <key file>
-    [-f] [-n <max # connections>] [-o <connection timeout>] [-p <pidfile>]
+    [-f] [-n <max # connections>] [-o <connection timeout>] [[-p <pidfile>] [-g]]
 
 Options:
     -e
@@ -68,7 +68,11 @@ Options:
     -p <pidfile>
 	File to which spiped's process ID should be written.  Defaults to
 	<source socket>.pid (in the current directory if <source socket> is
-	not an absolute path).
+	not an absolute path). This option conflicts with the -g option. 
+    -g
+  Do not daemonize. Process stays in foreground so it can be managed by
+  a service controller. This option conflicts with the -p option.
+
 
 For example, one might run
 
